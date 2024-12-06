@@ -1,0 +1,208 @@
+<!--653380203-8 ธีรภัทร์ แก้วโบราณ sec 2-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Modern Quiz Application</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #D7CCC8;
+    }
+
+    .header {
+      background-color: #8D6E63;
+      color: white;
+      padding: 30px;
+      text-align: center;
+      border-radius: 0 0 10px 10px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin-top: 30px;
+    }
+
+    .card {
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary {
+      background-color: #8D6E63;
+      border: none;
+      transition: 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      background-color: #6D4C41;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      border: none;
+      transition: 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+      background-color: #5a6268;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 50px;
+      padding: 20px;
+      background-color: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    .alert-info {
+      background-color: #e9f7fe;
+      border: 1px solid #bee5eb;
+      border-radius: 10px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <h1>แบบทดสอบ เข้าม.1</h1>
+</div>
+
+<div id="page1" class="container">
+  <div class="card p-4 text-center">
+    <h2>ยินดีต้อนรับสู่แบบทดสอบ</h2>
+    <p>คลิกปุ่มด้านล่างเพื่อเริ่มทำแบบทดสอบ</p>
+    <button class="btn btn-primary mt-3" id="btnStartPage1">เริ่มทำแบบทดสอบ</button>
+  </div>
+</div>
+
+<div id="page2" class="container" style="display: none;">
+  <div class="card p-4">
+    <h2>เลือกวิชา</h2>
+    <div class="mb-3">
+      <label for="subjectSelect" class="form-label">กรุณาเลือกวิชา:</label>
+      <select class="form-select" id="subjectSelect">
+        <option value="math">คณิตศาสตร์</option>
+        <option value="science">วิทย์ศาสตร์</option>
+        <option value="computer">คอมพิวเตอร์</option>
+      </select>
+    </div>
+    <button class="btn btn-primary mt-3" id="btnNextPage2">ลงมือทำแบบทดสอบ</button>
+  </div>
+</div>
+
+<div id="page3" class="container" style="display: none;">
+  <div class="card p-4">
+    <h2>โจทย์แบบทดสอบ</h2>
+    <div id="quizListBox" class="mt-3"></div>
+    <button class="btn btn-primary mt-4" id="btnCheckAnswer" style="display: none;">ตรวจคำตอบ</button>
+  </div>
+</div>
+
+<div id="page4" class="container" style="display: none;">
+  <div class="card p-4 text-center">
+    <h2>ผลคะแนนของคุณ</h2>
+    <h3 id="scoreDisplay" class="mt-3"></h3>
+    <button class="btn btn-secondary mt-4" id="btnBackToHome">กลับไปยังหน้าแรก</button>
+  </div>
+</div>
+
+<div class="footer">
+  <p>© 2024 MobileWeb Teeraphat</p>
+</div>
+
+<script>
+  var quizlist = {}; 
+  var userAnswers = {};
+  var currentQuiz = []; 
+
+
+  $.getJSON("quiz_math.json", (data) => quizlist["math"] = data);
+  $.getJSON("quiz_science.json", (data) => quizlist["science"] = data);
+  $.getJSON("quiz_computer.json", (data) => quizlist["computer"] = data);
+
+  $(function () {
+    $("#btnStartPage1").click(function () {
+      $("#page1").hide();
+      $("#page2").show();
+    });
+
+    $("#btnNextPage2").click(function () {
+      const selectedSubject = $("#subjectSelect").val();
+      if (!quizlist[selectedSubject] || quizlist[selectedSubject].length === 0) {
+        alert("ไม่พบข้อมูลแบบทดสอบในวิชาที่เลือก");
+        return;
+      }
+
+      $("#page2").hide();
+      $("#page3").show();
+      currentQuiz = quizlist[selectedSubject];
+      userAnswers = {};
+      displayQuizList(currentQuiz);
+    });
+
+    $("#btnCheckAnswer").click(function () {
+      let score = calculateScore();
+      $("#page3").hide();
+      $("#page4").show();
+      $("#scoreDisplay").text(`คุณได้คะแนน ${score}/${currentQuiz.length} คะแนน`);
+    });
+
+    $("#btnBackToHome").click(function () {
+      $("#page4").hide();
+      $("#page1").show();
+    });
+  });
+
+  function displayQuizList(quizData) {
+    $("#quizListBox").html("");
+    for (var i in quizData) {
+      displayQuiz(i, quizData[i]);
+    }
+
+    $("input[type='radio']").change(function () {
+      checkAllAnswered();
+    });
+  }
+
+  function displayQuiz(i, q) {
+    var no = parseInt(i) + 1;
+    var html = "<div class='p-2'>ข้อที่ " + no + ".<div>" + q.title + "</div>";
+    for (var c in q.options) {
+      var v = parseInt(c) + 1;
+      html += "<div class='alert alert-info'>";
+      html += `<input type='radio' name='q${no}' value='${v}' onchange="saveAnswer(${i}, ${v})"> ${v}. `;
+      html += q.options[c] + "</div>";
+    }
+    html += "</div>";
+    $("#quizListBox").append(html);
+  }
+
+  function saveAnswer(questionIndex, answerValue) {
+    userAnswers[questionIndex] = answerValue;
+  }
+
+  function checkAllAnswered() {
+    if (Object.keys(userAnswers).length === currentQuiz.length) {
+      $("#btnCheckAnswer").show();
+    }
+  }
+
+  function calculateScore() {
+    let score = 0;
+    for (var i in currentQuiz) {
+      if (userAnswers[i] == currentQuiz[i].answer) {
+        score++;
+      }
+    }
+    return score;
+  }
+</script>
+</body>
+</html>

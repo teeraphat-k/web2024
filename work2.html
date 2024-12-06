@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Modern Quiz Application</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Vue และ Vuetify -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.2.45/dist/vue.global.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.0.3/dist/vuetify.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.0.3/dist/vuetify.min.js"></script>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #F5F5F5;
+    }
+
+    .v-application {
+      background: #F5F5F5 !important;
+    }
+
+    .header {
+      background-color: #3E4A61;
+      color: white;
+      text-align: center;
+      padding: 30px 20px;
+      border-radius: 0 0 20px 20px;
+    }
+
+    .v-card {
+      border-radius: 20px;
+      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .v-card-title {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .v-radio {
+      padding: 8px;
+      border-radius: 8px;
+      transition: 0.3s ease;
+      align-items: center;
+    }
+
+    .v-radio:hover {
+      background-color: #90A4AE;
+    }
+
+    .v-radio--selected {
+      background-color: #3E4A61 !important;
+      color: #90A4AE !important;
+      border-radius: 8px;
+      padding: 10px;
+      transition: background-color 0.3s ease;
+    }
+
+    .v-radio-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .v-radio--checked .v-icon {
+      color: #3E4A61;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #3E4A61;
+      color: #90A4AE;
+      border-radius: 20px 20px 0 0;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <v-app>
+    <v-main>
+      <!-- Header -->
+      <div class="header">
+        <h1>แบบทดสอบเข้า ม.1</h1>
+      </div>
+
+      <!-- หน้าแรก -->
+      <v-container v-if="currentPage === 1" class="mt-5">
+        <v-card class="pa-5">
+          <v-card-title class="text-center">ยินดีต้อนรับสู่แบบทดสอบ</v-card-title>
+          <v-card-text class="text-center">
+            คลิกปุ่มด้านล่างเพื่อเริ่มทำแบบทดสอบ
+          </v-card-text>
+          <v-btn color="blue-grey-darken-3" class="mt-4" block @click="goToPage(2)">เริ่มทำแบบทดสอบ</v-btn>
+        </v-card>
+      </v-container>
+
+      <!-- หน้าเลือกวิชา -->
+      <v-container v-if="currentPage === 2" class="mt-5">
+        <v-card class="pa-5">
+          <v-card-title class="text-center">เลือกวิชา</v-card-title>
+          <v-card-text>
+            <v-select
+              label="กรุณาเลือกวิชา"
+              :items="subjects"
+              v-model="selectedSubject"
+              outlined
+            ></v-select>
+          </v-card-text>
+          <v-btn color="blue-grey-darken-3" class="mt-4" block :disabled="!selectedSubject" @click="goToPage(3)">ลงมือทำแบบทดสอบ</v-btn>
+        </v-card>
+      </v-container>
+
+      <!-- หน้าแบบทดสอบ -->
+      <v-container v-if="currentPage === 3" class="mt-5">
+        <v-card class="pa-5">
+          <v-card-title class="text-center">แบบทดสอบ</v-card-title>
+          <v-card-text>
+            <v-row v-for="(quiz, index) in quizzes[selectedSubject]" :key="index" class="mb-4">
+              <v-col cols="12">
+                <div class="mb-2"><strong>{{ index + 1 }}. {{ quiz.title }}</strong></div>
+                <v-radio-group 
+                  v-model="userAnswers[index]" 
+                  class="mt-2"
+                  color="primary"
+                >
+                  <v-radio
+                    v-for="(option, optIndex) in quiz.options"
+                    :key="optIndex"
+                    :label="option"
+                    :value="optIndex + 1"
+                    :class="{'v-radio--selected': userAnswers[index] === optIndex + 1}"
+                  >
+                    <template #prepend>
+                      <v-icon v-if="userAnswers[index] === optIndex + 1" color="blue">mdi-check-circle</v-icon>
+                      <v-icon v-else color="grey lighten-1">mdi-circle-outline</v-icon>
+                    </template>
+                  </v-radio>
+                </v-radio-group>
+              </v-col>
+            </v-row>
+          </v-card-text>
+          <v-btn color="blue-grey-darken-3" class="mt-4" block :disabled="!isAllAnswered" @click="checkAnswers">ตรวจคำตอบ</v-btn>
+        </v-card>
+      </v-container>
+
+      <!-- หน้าแสดงคะแนน -->
+      <v-container v-if="currentPage === 4" class="mt-5">
+        <v-card class="pa-5 text-center">
+          <v-card-title>ผลคะแนนของคุณ</v-card-title>
+          <v-card-text>
+            <h3>คุณได้คะแนน {{ score }} / {{ quizzes[selectedSubject].length }} คะแนน</h3>
+          </v-card-text>
+          <v-btn color="secondary" class="mt-4" block @click="goToPage(1)">กลับไปยังหน้าแรก</v-btn>
+        </v-card>
+      </v-container>
+    </v-main>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>© 2024 MobileWeb 653380203-8 ธีรภัทร์ แก้วโบราณ sec 2</p>
+    </div>
+  </v-app>
+</div>
+
+<script>
+  const app = Vue.createApp({
+    data() {
+      return {
+        currentPage: 1, // หน้าเริ่มต้น
+        selectedSubject: null, // วิชาที่เลือก
+        subjects: ["คณิตศาสตร์", "วิทยาศาสตร์", "คอมพิวเตอร์"], // รายชื่อวิชา
+        userAnswers: [], // เก็บคำตอบของผู้ใช้
+        score: 0, // คะแนนที่ได้
+        quizzes: {
+          คณิตศาสตร์: [],
+          วิทยาศาสตร์: [],
+          คอมพิวเตอร์: []
+        }
+      };
+    },
+    computed: {
+      isAllAnswered() {
+        return this.userAnswers.length === this.quizzes[this.selectedSubject].length;
+      }
+    },
+    methods: {
+      goToPage(page) {
+        this.currentPage = page;
+        if (page === 3) {
+          this.userAnswers = [];
+        }
+      },
+      async fetchQuizData() {
+        try {
+          const responseMath = await fetch('quiz_math.json');
+          const responseScience = await fetch('quiz_science.json');
+          const responseComputer = await fetch('quiz_computer.json');
+          
+          if (!responseMath.ok || !responseScience.ok || !responseComputer.ok) {
+            throw new Error('Error fetching quiz data');
+          }
+
+          this.quizzes['คณิตศาสตร์'] = await responseMath.json();
+          this.quizzes['วิทยาศาสตร์'] = await responseScience.json();
+          this.quizzes['คอมพิวเตอร์'] = await responseComputer.json();
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      },
+      checkAnswers() {
+        this.score = this.userAnswers.filter(
+          (answer, index) =>
+            answer === this.quizzes[this.selectedSubject][index].answer
+        ).length;
+        this.goToPage(4);
+      }
+    },
+    mounted() {
+      this.fetchQuizData();
+    }
+  });
+
+  app.use(Vuetify.createVuetify());
+  app.mount("#app");
+</script>
+</body>
+</html>

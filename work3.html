@@ -23,15 +23,15 @@
       // Component Menu
       function Menu(props) {
         const handleSubjectSelect = async (subject) => {
-          const file = subject === "math" ? "quiz_math.json" : "quiz_science.json"; // เลือกไฟล์
+          const file = subject === "math" ? "quiz_math.json" : "quiz_science.json"; 
           try {
             const res = await fetch(file);
             if (!res.ok) throw new Error("File not found");
             const data = await res.json();
-            props.app.setState({ qlist: data, status: 1, error: null }); // อัปเดต qlist และเปลี่ยนสถานะ
+            props.app.setState({ qlist: data, status: 1, error: null });
           } catch (error) {
             console.error("Error loading quiz data:", error);
-            props.app.setState({ error: "ไม่พบข้อมูลแบบทดสอบ" }); // อัปเดตสถานะ error
+            props.app.setState({ error: "ไม่พบข้อมูลแบบทดสอบ" });
           }
         };
 
@@ -104,7 +104,7 @@
         return (
           <div>
             <div>
-              {i + 1}. <span dangerouslySetInnerHTML={{ __html: q.title }}></span>
+              {i + 1}. {q.title}
             </div>
             <div>
               {q.options.map((p, pi) => (
@@ -113,7 +113,7 @@
                     <input
                       type="radio"
                       name={"q" + i}
-                      value={p}
+                      value={pi + 1}
                       onChange={handleChange}
                     />{" "}
                     {p}
@@ -147,21 +147,23 @@
       // Main Component App
       class App extends React.Component {
         state = {
-          qlist: [],
-          status: 0,
-          answers: {},
-          score: 0,
+          qlist: [], 
+          status: 0, 
+          answers: {}, 
+          score: 0, 
           valid: false,
-          error: null, // สำหรับเก็บข้อความ error
+          error: null,
         };
 
+        // ตรวจคำตอบและคำนวณคะแนน
         checkAnswer() {
           const score = this.state.qlist.reduce((total, q, i) => {
-            return total + (q.answer === this.state.answers["q" + i] ? 1 : 0);
+            return total + (q.answer === parseInt(this.state.answers["q" + i]) ? 1 : 0);
           }, 0);
           this.setState({ status: 2, score });
         }
 
+        // ตรวจสอบว่าตอบครบทุกข้อหรือยัง
         validate() {
           const valid = this.state.qlist.every((q, i) =>
             this.state.answers["q" + i]

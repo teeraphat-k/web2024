@@ -1,0 +1,33 @@
+<html>
+  <head>
+    <!-- A-Frame Library -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <!-- A-Frame Extras Library -->
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.2/dist/aframe-extras.min.js"></script>
+  </head>
+  <body>
+    <a-scene>
+      <!-- โมเดล Cool Bannana Guy -->
+      <a-entity 
+        gltf-model="Cool Bannana Guy.glb" 
+        animation-mixer="clip:*" 
+        scale="0.5 0.5 0.5" 
+        position="0 0.45905 -4.41752">
+      </a-entity>
+      
+      <!-- พื้นหลัง w2.jpg -->
+      <a-sky src="w2.jpg"></a-sky>
+      
+      <!-- กล่องพร้อมอนิเมชัน -->
+      <a-box position="0 1 -3" color="#4CC3D9" animation="property: position; to: 0 2 -3; dir: alternate; dur: 2000; loop: true"></a-box>
+      
+      <!-- ข้อความแนะนำตัว -->
+      <a-text 
+        value="นาย ธีรภัทร์ แก้วโบราณ\nรหัส 653380203-8" 
+        position="-1 2.5 -3" 
+        color="#000000" 
+        align="center">
+      </a-text>
+    </a-scene>
+  </body>
+</html>

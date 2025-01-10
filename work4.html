@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VR 360 Presentation</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      .info-box {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-family: Arial, sans-serif;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <a-scene>
+      <a-sky src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/sechelt.jpg"></a-sky>
+
+      <a-entity gltf-model="w1.glb" position="0 1.6 -3" scale="1 1 1"></a-entity>
+
+      <a-entity position="0 3 -3">
+        <a-text
+          value="Teeraphat Kaewboran\n653380203-8"
+          align="center"
+          color="#FFFFFF"
+          width="3"
+        ></a-text>
+      </a-entity>
+
+      <a-animation
+        attribute="rotation"
+        dur="10000"
+        fill="forwards"
+        to="0 360 0"
+        repeat="indefinite"
+        easing="linear"
+      ></a-animation>
+
+      <a-animation
+        attribute="position"
+        dur="2000"
+        direction="alternate"
+        repeat="indefinite"
+        easing="ease-in-out"
+        to="0 2 0"
+      ></a-animation>
+    </a-scene>
+
+    <div class="info-box">
+      <h3>Welcome!</h3>
+      <p>Teeraphat Kaewboran</p>
+      <p>ID: 653380203-8</p>
+    </div>
+  </body>
+</html>

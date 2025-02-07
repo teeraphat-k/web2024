@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Work6</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/vuetify@3.4.10/dist/vuetify.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.4.10/dist/vuetify.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <!-- Material Design Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css"
+      rel="stylesheet"
+    />
+
+    <script>
+      // Firebase Configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDG2fjGg1WaM902PwKh45-BfnkxUD6dOHI",
+        authDomain: "web2567-6533802038.firebaseapp.com",
+        projectId: "web2567-6533802038",
+        storageBucket: "web2567-6533802038.firebasestorage.app",
+        messagingSenderId: "34126215939",
+        appId: "1:34126215939:web:fa6b67747d81dcd4e60736",
+        measurementId: "G-4SVR88MNG5"
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <v-app>
+        <v-container>
+          <v-card v-if="user" class="mb-4">
+            <v-card-text>
+              <p>Welcome, {{ user.displayName }}</p>
+              <v-btn color="red" @click="google_logout()">
+                <v-icon icon="mdi-logout"></v-icon> Logout
+              </v-btn>
+            </v-card-text>
+          </v-card>
+          <v-card v-else class="mb-4">
+            <v-card-text>
+              <p>Please log in</p>
+              <v-btn color="blue" @click="google_login()">
+                <v-icon icon="mdi-login"></v-icon> Login with Google
+              </v-btn>
+            </v-card-text>
+          </v-card>
+
+          <v-card v-if="ustudent" class="mb-4">
+            <v-card-text>
+              <p><strong>Student Info:</strong></p>
+              <p>ID: {{ ustudent.id }}</p>
+              <p>Name: {{ ustudent.fname }} {{ ustudent.lname }}</p>
+              <p>Email: {{ ustudent.email }}</p>
+              <p>Phone: {{ ustudent.phone }}</p>
+            </v-card-text>
+          </v-card>
+
+          <v-card>
+            <v-card-title class="bg-blue-grey">{{ title }}</v-card-title>
+            <v-card-actions>
+              <v-btn color="primary" @click="readData()">
+                <v-icon icon="mdi-database-search"></v-icon> Read Data
+              </v-btn>
+              <v-btn color="success" @click="autoRead()">
+                <v-icon icon="mdi-refresh"></v-icon> Auto Read
+              </v-btn>
+              <v-btn color="info" @click="addData()">
+                <v-icon icon="mdi-plus"></v-icon> Add Data
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+
+          <div>{{ ustudent }}</div>
+
+          <div class="pa-6 text-center">{{ footer }}</div>
+        </v-container>
+      </v-app>
+    </div>
+
+    <script>
+      const vuetify = Vuetify.createVuetify();
+      const app = Vue.createApp({
+        data() {
+          return {
+            title: "Work 6: เรียกใช้ฐานข้อมูล Firebase ด้วย VueJS",
+            footer: "ระบุ รหัส ชื่อ-สกุล สาขา",
+            students: [],
+            editstd: {},
+            editmode: "",
+            user: null,
+            ustudent: null,
+            unsubscribe: null,
+          };
+        },
+        mounted() {
+          firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+              this.user = user.toJSON();
+              this.getstudent(this.user.email);
+            } else {
+              this.user = null;
+              this.ustudent = null;
+            }
+          });
+        },
+        methods: {
+          google_login() {
+            var provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider);
+          },
+          google_logout() {
+            firebase.auth().signOut();
+          },
+          getstudent(email) {
+            db.collection("students")
+              .where("email", "==", email)
+              .limit(1)
+              .get()
+              .then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                  this.ustudent = { id: doc.id, ...doc.data() };
+                });
+              });
+          },
+          readData() {
+            db.collection("students").get().then((querySnapshot) => {
+              this.students = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+              }));
+            });
+          },
+          autoRead() {
+            if (this.unsubscribe) {
+              this.unsubscribe();
+              this.unsubscribe = null;
+              return;
+            }
+
+            this.unsubscribe = db.collection("students").onSnapshot((querySnapshot) => {
+              this.students = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+              }));
+            });
+          },
+        },
+      });
+
+      app.use(vuetify).mount("#app");
+    </script>
+  </body>
+</html>
